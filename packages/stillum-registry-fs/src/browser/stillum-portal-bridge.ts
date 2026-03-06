@@ -43,7 +43,6 @@ export interface ArtifactData {
     title: string;
     description?: string | null;
     area?: string | null;
-    componentType?: 'DROPLET' | 'POOL' | 'TRIGGER' | null;
     parentModuleId?: string | null;
 }
 
