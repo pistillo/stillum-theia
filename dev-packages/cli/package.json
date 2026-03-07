@@ -25,11 +25,11 @@
     "theia-patch": "./bin/theia-patch.js"
   },
   "scripts": {
-    "compile": "theiaext compile",
-    "lint": "theiaext lint",
-    "build": "theiaext build",
-    "watch": "theiaext watch",
-    "clean": "theiaext clean"
+    "compile": "npx theiaext compile",
+    "lint": "npx theiaext lint",
+    "build": "npx theiaext build",
+    "watch": "npx theiaext watch",
+    "clean": "npx theiaext clean"
   },
   "dependencies": {
     "@theia/application-manager": "1.69.0",

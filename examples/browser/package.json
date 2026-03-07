@@ -99,12 +99,12 @@
     "@theia/workspace": "1.69.0"
   },
   "scripts": {
-    "clean": "theiaext clean",
-    "build": "theiaext build && npm run -s bundle",
-    "build:production": "theiaext build && npm run -s bundle:production",
+    "clean": "npx theiaext clean",
+    "build": "npx theiaext build && npm run -s bundle",
+    "build:production": "npx theiaext build && npm run -s bundle:production",
     "bundle": "npm run rebuild && theia build --mode development",
     "bundle:production": "npm run rebuild && theia build --mode production",
-    "compile": "tsc -b",
+    "compile": "npx tsc -b",
     "coverage": "npm run -s test -- --test-coverage && npm run -s coverage:report",
     "coverage:clean": "rimraf .nyc_output && rimraf coverage",
     "coverage:report": "nyc report --reporter=html",

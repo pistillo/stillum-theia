@@ -51,16 +51,7 @@ export interface VersionData {
     artifactId: string;
     version: string;
     state: string;
-    sourceCode?: string | null;
-    buildSnapshot?: BuildSnapshotData | null;
-    sourceFiles?: Record<string, string> | null;
-}
-
-export interface BuildSnapshotData {
-    generatedAt: string;
-    templateVersion: string;
-    inputs: Record<string, string>;
-    files: Record<string, string>;
+    files?: Record<string, string> | null;
 }
 
 @injectable()
@@ -147,10 +138,10 @@ export class StillumPortalBridge implements Disposable {
     }
 
     /**
-     * Save source code by delegating to the portal via postMessage (avoids CORS).
-     * Sends a save-request, waits for the portal's save-response.
+     * Save files by delegating to the portal via postMessage (avoids CORS).
+     * Sends a save-request with a files map, waits for the portal's save-response.
      */
-    async saveSourceCode(artifactId: string, versionId: string, sourceCode: string): Promise<void> {
+    async saveFiles(artifactId: string, versionId: string, files: Record<string, string>): Promise<void> {
         const requestId = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
         return new Promise<void>((resolve, reject) => {
@@ -179,44 +170,7 @@ export class StillumPortalBridge implements Disposable {
                 requestId,
                 artifactId,
                 versionId,
-                sourceCode,
-            }, '*');
-        });
-    }
-
-    /**
-     * Save multiple files for a component artifact (avoids CORS via postMessage).
-     */
-    async saveComponentFiles(artifactId: string, versionId: string, sourceFiles: Record<string, string>): Promise<void> {
-        const requestId = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-
-        return new Promise<void>((resolve, reject) => {
-            const timeout = setTimeout(() => {
-                window.removeEventListener('message', handler);
-                reject(new Error('Save timed out — no response from portal'));
-            }, 30_000);
-
-            const handler = (event: MessageEvent) => {
-                const msg = event.data;
-                if (msg?.type === 'stillum:save-response' && msg.requestId === requestId) {
-                    window.removeEventListener('message', handler);
-                    clearTimeout(timeout);
-                    if (msg.success) {
-                        resolve();
-                    } else {
-                        reject(new Error(msg.error ?? 'Save failed'));
-                    }
-                }
-            };
-
-            window.addEventListener('message', handler);
-
-            window.parent.postMessage({
-                type: 'stillum:save-request',
-                requestId,
-                artifactId,
-                versionId,
-                sourceFiles,
+                files,
             }, '*');
         });
     }

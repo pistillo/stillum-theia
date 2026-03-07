@@ -41,13 +41,13 @@
     "src"
   ],
   "scripts": {
-    "build": "theiaext build",
-    "clean": "theiaext clean",
-    "compile": "theiaext compile",
-    "docs": "theiaext docs",
-    "lint": "theiaext lint",
-    "test": "theiaext test",
-    "watch": "theiaext watch"
+    "build": "npx theiaext build",
+    "clean": "npx theiaext clean",
+    "compile": "npx theiaext compile",
+    "docs": "npx theiaext docs",
+    "lint": "npx theiaext lint",
+    "test": "npx theiaext test",
+    "watch": "npx theiaext watch"
   },
   "devDependencies": {
     "@theia/ext-scripts": "1.69.0"

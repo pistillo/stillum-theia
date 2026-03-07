@@ -17,12 +17,12 @@
   },
   "scripts": {
     "afterInstall": "npm run build",
-    "build": "theiaext build",
-    "clean": "theiaext clean",
-    "compile": "theiaext compile",
-    "lint": "theiaext lint",
-    "test": "theiaext test",
-    "watch": "theiaext watch"
+    "build": "npx theiaext build",
+    "clean": "npx theiaext clean",
+    "compile": "npx theiaext compile",
+    "lint": "npx theiaext lint",
+    "test": "npx theiaext test",
+    "watch": "npx theiaext watch"
   },
   "dependencies": {
     "mustache": "^4.2.0",

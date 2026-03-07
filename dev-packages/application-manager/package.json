@@ -21,12 +21,12 @@
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
   "scripts": {
-    "build": "theiaext build",
-    "clean": "theiaext clean",
-    "compile": "theiaext compile",
-    "lint": "theiaext lint",
-    "test": "theiaext test",
-    "watch": "theiaext watch"
+    "build": "npx theiaext build",
+    "clean": "npx theiaext clean",
+    "compile": "npx theiaext compile",
+    "lint": "npx theiaext lint",
+    "test": "npx theiaext test",
+    "watch": "npx theiaext watch"
   },
   "dependencies": {
     "@babel/core": "^7.10.0",

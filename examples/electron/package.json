@@ -102,11 +102,11 @@
     "@theia/workspace": "1.69.0"
   },
   "scripts": {
-    "build": "theiaext build && npm run -s bundle",
+    "build": "npx theiaext build && npm run -s bundle",
     "bundle": "npm run rebuild && theia build --mode development",
-    "clean": "theiaext clean",
-    "compile": "tsc -b",
-    "lint": "theiaext lint",
+    "clean": "npx theiaext clean",
+    "compile": "npx tsc -b",
+    "lint": "npx theiaext lint",
     "rebuild": "theia rebuild:electron --cacheRoot ../..",
     "start": "theia start --plugins=local-dir:../../plugins --ovsx-router-config=../ovsx-router-config.json",
     "start:debug": "npm run -s start -- --log-level=debug --remote-debugging-port=9222",

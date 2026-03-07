@@ -15,7 +15,7 @@ interface FileEntry {
     name: string;
     artifactId: string;
     versionId: string;
-    sourceCode: string;
+    content: string;
 }
 
 @injectable()
@@ -49,32 +49,38 @@ export class StillumRegistryFsProvider implements Disposable,
     loadWorkspace(data: WorkspaceData): void {
         this.files.clear();
 
-        // Module's own sourceCode -> index.tsx
+        // Module's own src/index.tsx -> index.tsx
         if (data.moduleVersion) {
+            const moduleSource = data.moduleVersion.files?.['src/index.tsx'] ?? '';
             this.files.set('index.tsx', {
                 name: 'index.tsx',
                 artifactId: data.module.id,
                 versionId: data.moduleVersion.id,
-                sourceCode: data.moduleVersion.sourceCode ?? '',
+                content: moduleSource,
             });
         }
 
-        // Each component -> {title}.tsx
+        // Each component -> {title}.tsx (first .tsx file from files map)
         const usedNames = new Set<string>(['index.tsx']);
         for (const comp of data.components) {
             let fileName = this.toFileName(comp.artifact.title);
             if (usedNames.has(fileName)) {
-                // Avoid name collisions by appending short artifact ID
                 const shortId = comp.artifact.id.substring(0, 8);
                 fileName = this.toFileName(`${comp.artifact.title}-${shortId}`);
             }
             usedNames.add(fileName);
 
+            // Pick the first file content from the files map
+            const compFiles = comp.version?.files;
+            const firstContent = compFiles
+                ? Object.values(compFiles)[0] ?? ''
+                : '';
+
             this.files.set(fileName, {
                 name: fileName,
                 artifactId: comp.artifact.id,
                 versionId: comp.version?.id ?? '',
-                sourceCode: comp.version?.sourceCode ?? '',
+                content: firstContent,
             });
         }
     }
@@ -116,7 +122,7 @@ export class StillumRegistryFsProvider implements Disposable,
             );
         }
 
-        const content = new TextEncoder().encode(entry.sourceCode);
+        const content = new TextEncoder().encode(entry.content);
         return {
             type: FileType.File,
             ctime: Date.now(),
@@ -147,7 +153,7 @@ export class StillumRegistryFsProvider implements Disposable,
             );
         }
 
-        return new TextEncoder().encode(entry.sourceCode);
+        return new TextEncoder().encode(entry.content);
     }
 
     async writeFile(resource: URI, content: Uint8Array, _opts: FileWriteOptions): Promise<void> {
@@ -160,11 +166,11 @@ export class StillumRegistryFsProvider implements Disposable,
             );
         }
 
-        const newSourceCode = new TextDecoder().decode(content);
-        entry.sourceCode = newSourceCode;
+        const newContent = new TextDecoder().decode(content);
+        entry.content = newContent;
 
-        // Persist to registry API
-        await this.bridge.saveSourceCode(entry.artifactId, entry.versionId, newSourceCode);
+        // Persist to registry API via unified files map
+        await this.bridge.saveFiles(entry.artifactId, entry.versionId, { [entry.name]: newContent });
 
         this.onDidChangeFileEmitter.fire([{
             resource,

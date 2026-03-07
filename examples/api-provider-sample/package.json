@@ -31,10 +31,10 @@
   ],
   "types": "src/gotd.d.ts",
   "scripts": {
-    "lint": "theiaext lint",
-    "build": "theiaext build",
-    "watch": "theiaext watch",
-    "clean": "theiaext clean"
+    "lint": "npx theiaext lint",
+    "build": "npx theiaext build",
+    "watch": "npx theiaext watch",
+    "clean": "npx theiaext clean"
   },
   "devDependencies": {
     "@theia/ext-scripts": "1.69.0"

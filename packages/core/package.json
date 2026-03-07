@@ -200,17 +200,17 @@
     "src"
   ],
   "scripts": {
-    "build": "theiaext build",
-    "clean": "theiaext clean",
-    "compile": "theiaext compile",
+    "build": "npx theiaext build",
+    "clean": "npx theiaext clean",
+    "compile": "npx theiaext compile",
     "generate-layout": "electron ./scripts/generate-layout",
     "afterInstall": "npm run generate-theia-re-exports && npm run download:json-schema",
     "generate-theia-re-exports": "theia-re-exports generate && theia-re-exports template README_TEMPLATE.md > README.md",
-    "lint": "theiaext lint",
+    "lint": "npx theiaext lint",
     "download:json-schema": "node ./scripts/download-catalog.js",
-    "test": "theiaext test",
+    "test": "npx theiaext test",
     "version": "npm run -s generate-theia-re-exports",
-    "watch": "theiaext watch"
+    "watch": "npx theiaext watch"
   },
   "devDependencies": {
     "@theia/ext-scripts": "1.69.0",

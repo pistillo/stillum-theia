@@ -10,7 +10,7 @@
     "ts-clean-dangling": "bin/theia-ts-clean.js"
   },
   "theia-monorepo-scripts": {
-    "ext:clean": "theiaext compile:clean && theiaext lint:clean && theiaext test:clean",
+    "ext:clean": "npx theiaext compile:clean && theiaext lint:clean && theiaext test:clean",
     "ext:build": "ts-clean-dangling && tsc --build",
     "ext:compile": "ts-clean-dangling && tsc --project .",
     "ext:compile:clean": "rimraf lib *.tsbuildinfo",

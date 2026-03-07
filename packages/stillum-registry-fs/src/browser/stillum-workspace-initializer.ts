@@ -78,18 +78,19 @@ export class StillumWorkspaceInitializer implements FrontendApplicationContribut
             workspace = await this.bridge.fetchWorkspace();
         }
 
+        const moduleFiles = workspace.moduleVersion?.files;
+        const hasFiles = !!moduleFiles && Object.keys(moduleFiles).length > 0;
+
         console.log('[StillumWorkspaceInitializer] Workspace loaded:', {
             moduleTitle: workspace.module?.title,
             hasModuleVersion: !!workspace.moduleVersion,
-            hasBuildSnapshot: !!workspace.moduleVersion?.buildSnapshot?.files,
+            hasFiles,
+            moduleFileCount: moduleFiles ? Object.keys(moduleFiles).length : 0,
             componentCount: workspace.components?.length ?? 0,
         });
 
-        // Check if build snapshot is available for disk materialization
-        const hasBuildSnapshot = !!workspace.moduleVersion?.buildSnapshot?.files;
-
-        if (!hasBuildSnapshot) {
-            console.warn('[StillumWorkspaceInitializer] No build snapshot available, falling back to virtual filesystem');
+        if (!hasFiles) {
+            console.warn('[StillumWorkspaceInitializer] No module files available, falling back to virtual filesystem');
             this.fallbackToVirtualFs(initData, workspace);
             return;
         }
@@ -170,41 +171,36 @@ export class StillumWorkspaceInitializer implements FrontendApplicationContribut
         const snapshotFiles: Record<string, string> = {};
         const components: ComponentFiles[] = [];
 
-        // Build snapshot files (package.json, tsconfig, webpack, etc.)
-        if (workspace.moduleVersion?.buildSnapshot?.files) {
-            Object.assign(snapshotFiles, workspace.moduleVersion.buildSnapshot.files);
-        }
-
-        // Module source code -> src/index.tsx
-        const moduleSourceCode = workspace.moduleVersion?.sourceCode || undefined;
-
-        // Component files — each component has its own folder
-        for (const comp of workspace.components) {
-            if (!comp.version) continue;
-
-            const area = comp.artifact.area || 'droplets';
-            const title = comp.artifact.title;
-            const files: Record<string, string> = {};
-
-            if (comp.version.sourceFiles && Object.keys(comp.version.sourceFiles).length > 0) {
-                // Multi-file component: use sourceFiles map (filenames relative to component folder)
-                Object.assign(files, comp.version.sourceFiles);
-            } else if (comp.version.sourceCode) {
-                // Single-file backward compat: create <Title>.tsx from sourceCode
-                files[`${title}.tsx`] = comp.version.sourceCode;
+        // Split module files into config (snapshotFiles) and source (moduleSourceCode)
+        if (workspace.moduleVersion?.files) {
+            let moduleSourceCode: string | undefined;
+            for (const [path, content] of Object.entries(workspace.moduleVersion.files)) {
+                if (path === 'src/index.tsx') {
+                    moduleSourceCode = content;
+                } else {
+                    snapshotFiles[path] = content;
+                }
             }
 
-            if (Object.keys(files).length > 0) {
+            // Component files — each component has its own folder
+            for (const comp of workspace.components) {
+                if (!comp.version?.files || Object.keys(comp.version.files).length === 0) continue;
+
+                const area = comp.artifact.area || 'droplets';
+                const title = comp.artifact.title;
+
                 components.push({
                     artifactId: comp.artifact.id,
                     title,
                     area,
-                    files,
+                    files: { ...comp.version.files },
                 });
             }
+
+            return { snapshotFiles, moduleSourceCode, components };
         }
 
-        return { snapshotFiles, moduleSourceCode, components };
+        return { snapshotFiles, components };
     }
 
     // ─── Sync mappings ─────────────────────────────────────────────────
@@ -372,7 +368,7 @@ export class StillumWorkspaceInitializer implements FrontendApplicationContribut
     }
 
     /**
-     * Sync module's src/index.tsx to the registry as sourceCode.
+     * Sync module's src/index.tsx to the registry.
      */
     private async syncModuleSourceCode(fileUri: URI): Promise<void> {
         if (!this.moduleMapping) return;
@@ -382,10 +378,10 @@ export class StillumWorkspaceInitializer implements FrontendApplicationContribut
                 '| artifactId:', this.moduleMapping.artifactId,
                 '| versionId:', this.moduleMapping.versionId,
                 '| contentLength:', content.value.length);
-            await this.bridge.saveSourceCode(
+            await this.bridge.saveFiles(
                 this.moduleMapping.artifactId,
                 this.moduleMapping.versionId,
-                content.value,
+                { 'src/index.tsx': content.value },
             );
             console.log('[StillumWorkspaceInitializer] ✅ Module source sync successful');
             this.bridge.notifyDirtyState(false);
@@ -413,7 +409,7 @@ export class StillumWorkspaceInitializer implements FrontendApplicationContribut
 
     /**
      * Scan a component folder, collect all files, and sync them to the registry
-     * as sourceFiles: { "Button.tsx": "...", "Button.test.tsx": "...", ... }
+     * as files: { "Button.tsx": "...", "Button.test.tsx": "...", ... }
      */
     private async syncComponentFolder(tracked: TrackedComponentFolder): Promise<void> {
         try {
@@ -430,7 +426,7 @@ export class StillumWorkspaceInitializer implements FrontendApplicationContribut
                 '| files:', Object.keys(sourceFiles),
                 '| artifactId:', tracked.artifactId,
                 '| versionId:', tracked.versionId);
-            await this.bridge.saveComponentFiles(
+            await this.bridge.saveFiles(
                 tracked.artifactId,
                 tracked.versionId,
                 sourceFiles,
